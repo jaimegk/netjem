@@ -2,174 +2,174 @@
 
 # Network Emulation API (NetJem)
 
-Una API REST basada en FastAPI que permite emular condiciones de red mediante Linux Traffic Control (tc) para pruebas y simulación de redes.
+A REST API based on FastAPI that allows emulating network conditions using Linux Traffic Control (tc) for testing and network simulation.
 
-## Funcionalidades
+## Features
 
-- **Emulación de latencia**: Añade retardos configurables a los paquetes
-- **Pérdida de paquetes**: Simula pérdida aleatoria de paquetes (0-100%)
-- **Corrupción de datos**: Introduce errores aleatorios en paquetes
-- **Duplicación de paquetes**: Simula duplicación aleatoria de paquetes
-- **Control de ancho de banda**: Limita la velocidad de transmisión
-- **Filtrado por IP**: Aplica emulación solo a direcciones IP específicas
-- **Escaneo ARP**: Descubre dispositivos activos en la red
-- **Gestión de interfaces**: Manejo de múltiples interfaces de red
+- **Latency Emulation**: Adds configurable delays to packets.
+- **Packet Loss**: Simulates random packet loss (0-100%).
+- **Data Corruption**: Introduces random errors in packets.
+- **Packet Duplication**: Simulates random packet duplication.
+- **Bandwidth Control**: Limits the transmission speed.
+- **IP Filtering**: Applies emulation only to specific IP addresses.
+- **ARP Scan**: Discovers active devices on the network.
+- **Interface Management**: Handles multiple network interfaces.
 
-## Requisitos del Sistema
+## System Requirements
 
 ### Hardware
-- Arquitectura x86_64 o ARM64
-- Mínimo 512MB RAM disponible
-- Acceso a interfaces de red del host
+- x86_64 or ARM64 architecture
+- Minimum 512MB RAM available
+- Access to host network interfaces
 
 ### Software
-- **Linux**: Ubuntu 18.04+, Debian 9+, CentOS 7+, o distribuciones compatibles
-- **Docker**: Versión 20.10 o superior
-- **Permisos**: Acceso de superusuario (root/sudo)
+- **Linux**: Ubuntu 18.04+, Debian 9+, CentOS 7+, or compatible distributions.
+- **Docker**: Version 20.10 or higher.
+- **Permissions**: Superuser access (root/sudo).
 
-### Compatibilidad por Plataforma
-- ✅ **Linux nativo**: Funcionalidad completa
-- ⚠️ **Windows con WSL2**: Funcionalidad limitada, dado que tc solo afecta al subsistema WSL2
-- ⚠️ **macOS**: Funcionalidad limitada, dado que tc solo afecta al contenedor Docker
-- ❌ **Windows nativo**: No compatible con traffic control
+### Platform Compatibility
+- ✅ **Native Linux**: Full functionality.
+- ⚠️ **Windows with WSL2**: Limited functionality, as `tc` only affects the WSL2 subsystem.
+- ⚠️ **macOS**: Limited functionality, as `tc` only affects the Docker container.
+- ❌ **Native Windows**: Not compatible with traffic control.
 
-## Instalación y Ejecución
+## Installation and Execution
 
-### Paso 1: Obtener el código
+### Step 1: Get the code
 ```bash
-git clone <repositorio>
-cd TrafficShaping
+git clone <repository_url>
+cd TSDocker
 ```
 
-### Paso 2: Construir la imagen Docker
+### Step 2: Build the Docker image
 ```bash
-# Opción recomendada (imagen optimizada)
+# Recommended option (optimized image)
 docker build -f Dockerfile.multistage -t netjem-api .
 
-# Opción alternativa (imagen simple)
+# Alternative option (simple image)
 docker build -t netjem-api .
 ```
 
-### Paso 3: Ejecutar el contenedor
+### Step 3: Run the container
 ```bash
-# Ejecución con acceso completo a la red del host
+# Execution with full access to the host's network
 docker run --privileged --network host netjem-api
 ```
 
-### Paso 4: Verificar funcionamiento
-- API disponible en: http://localhost:11111/docs
+### Step 4: Verify operation
+- API available at: http://localhost:11111/docs
 
-## Parámetros de Ejecución
+## Execution Parameters
 
-### Flags de Docker requeridos
+### Required Docker Flags
 
 **`--privileged`**
-- **Propósito**: Otorga capacidades administrativas al contenedor
-- **Necesario para**: Ejecutar comandos tc (traffic control)
-- **Riesgo**: Acceso completo al sistema host
+- **Purpose**: Grants administrative capabilities to the container.
+- **Required for**: Executing `tc` (traffic control) commands.
+- **Risk**: Full access to the host system.
 
 **`--network host`**
-- **Propósito**: Comparte el stack de red del host con el contenedor
-- **Necesario para**: Que las modificaciones tc afecten las interfaces reales del host
-- **Efecto**: El contenedor ve y modifica directamente las interfaces del sistema
+- **Purpose**: Shares the host's network stack with the container.
+- **Required for**: `tc` modifications to affect the host's real interfaces.
+- **Effect**: The container sees and modifies the system's interfaces directly.
 
-### Configuración avanzada
+### Advanced Configuration
 ```bash
-# Ejecutar en segundo plano
+# Run in the background
 docker run -d --privileged --network host --name netjem netjem-api
 
-# Ejecutar con logs visibles
+# Run with visible logs
 docker run --privileged --network host --rm netjem-api
 
-# Ejecutar con reinicio automático
+# Run with automatic restart
 docker run -d --restart unless-stopped --privileged --network host netjem-api
 ```
 
-## Advertencias de Seguridad
+## Security Warnings
 
-### ⚠️ CRÍTICO
-- **Permisos privilegiados**: El contenedor tiene acceso completo al sistema host
-- **Modificación de red**: Puede alterar significativamente el comportamiento de red
-- **Interrupciones de servicio**: Las configuraciones incorrectas pueden causar pérdida de conectividad
+### CRITICAL
+- **Privileged Permissions**: The container has full access to the host system.
+- **Network Modification**: Can significantly alter network behavior.
+- **Service Interruptions**: Incorrect configurations can cause loss of connectivity.
 
-### ⚠️ IMPORTANTE
-- **Solo desarrollo/testing**: No recomendado para entornos de producción sin supervisión
-- **Respaldos de configuración**: Asegúrese de poder restaurar la configuración de red original
-- **Monitoreo**: Supervise el impacto en el rendimiento de red durante las pruebas
+### IMPORTANT
+- **Development/Testing Only**: Not recommended for production environments without supervision.
+- **Configuration Backups**: Ensure you can restore the original network configuration.
+- **Monitoring**: Supervise the impact on network performance during tests.
 
-### ⚠️ OPERACIONAL
-- **Persistencia**: Las configuraciones tc se pierden al reiniciar el sistema
-- **Conflictos**: Puede interferir con otras herramientas de gestión de red (NetworkManager, systemd-networkd)
-- **Recursos**: Traffic Shaping puede afectar de forma muy agresiva a las comunicaciones de red. Se recomienda siempre ejecutar un borrado cuando se haya finalizado la experimentación
+### OPERATIONAL
+- **Persistence**: `tc` configurations are lost upon system reboot.
+- **Conflicts**: May interfere with other network management tools (NetworkManager, systemd-networkd).
+- **Resources**: Traffic shaping can aggressively affect network communications. It is always recommended to perform a cleanup after experimentation is finished.
 
-## Validación de Instalación
+## Installation Validation
 
-### Verificar capacidades del sistema
+### Verify system capabilities
 ```bash
-# Comprobar que tc está disponible
+# Check that tc is available
 docker run --privileged --network host --rm netjem-api tc qdisc show
 
-# Verificar interfaces de red disponibles
+# Verify available network interfaces
 docker run --privileged --network host --rm netjem-api ip link show
 
-# Probar conectividad de la API
+# Test API connectivity
 curl http://localhost:11111/interfaces_info
 ```
 
-## Ejecución Nativa (Alternativa)
+## Native Execution (Alternative)
 
-Para sistemas Linux sin Docker:
+For Linux systems without Docker:
 
-### Instalar dependencias
+### Install dependencies
 ```bash
 sudo apt update
 sudo apt install python3 python3-pip iproute2
 ```
 
-### Configurar entorno Python
+### Configure Python environment
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Ejecutar aplicación
+### Run application
 ```bash
 sudo python -m uvicorn NetJemAPI:app --host 0.0.0.0 --port 11111
 ```
 
-## Solución de Problemas
+## Troubleshooting
 
 ### Error: "tc: command not found"
 ```bash
-# Reconstruir imagen sin caché
+# Rebuild image without cache
 docker build -f Dockerfile.multistage -t netjem-api --no-cache .
 ```
 
 ### Error: "Permission denied"
 ```bash
-# Verificar que Docker tiene permisos sudo
+# Verify that Docker has sudo permissions
 sudo docker run --privileged --network host netjem-api
 ```
 
 ### Error: "Cannot bind to port 11111"
 ```bash
-# Verificar que el puerto no esté en uso
+# Check if the port is in use
 sudo netstat -tulpn | grep 11111
-# O usar un puerto diferente
+# Or use a different port
 docker run --privileged --network host -e PORT=8080 netjem-api
 ```
 
-## Uso de la API
+## API Usage
 
-Una vez en funcionamiento, acceda a:
-- **Documentación interactiva**: http://localhost:11111/docs
-- **Especificación OpenAPI**: http://localhost:11111/openapi.json
+Once running, access:
+- **Interactive Documentation**: http://localhost:11111/docs
+- **OpenAPI Specification**: http://localhost:11111/openapi.json
 
-## Limitaciones Técnicas
+## Technical Limitations
 
-1. **Plataforma**: Requiere kernel Linux con soporte para tc
-2. **Permisos**: Necesita privilegios administrativos
-3. **Red**: Las modificaciones afectan todo el tráfico del sistema
-4. **Persistencia**: Configuraciones temporales (se pierden al reiniciar)
-5. **Concurrencia**: Un solo punto de control por interfaz de red
+1. **Platform**: Requires a Linux kernel with `tc` support.
+2. **Permissions**: Needs administrative privileges.
+3. **Network**: Modifications affect all system traffic.
+4. **Persistence**: Temporary configurations (lost on reboot).
+5. **Concurrency**: Only one control point per network interface.
